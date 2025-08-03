@@ -1,0 +1,18 @@
+{
+  "Statement": [
+    {
+      "Action": ["cognito-idp:AdminCreateUser", "cognito-idp:AdminAddUserToGroup"],
+      "Effect": "Allow",
+      "Resource": "arn:aws:cognito-idp:eu-west-3:477895277343:userpool/eu-west-3_wuiIwJJUW"
+    },
+    {
+      "Action": ["ssm:PutParameter", "ssm:GetParameter"],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:ssm:*:*:parameter/amplify/amplifyvuetemplate/victorgrf-sandbox-cd674a27fe/*",
+        "arn:aws:ssm:*:*:parameter/amplify/shared/amplify-vue-template/*"
+      ]
+    }
+  ],
+  "Version": "2012-10-17"
+}

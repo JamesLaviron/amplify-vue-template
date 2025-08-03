@@ -1,0 +1,11 @@
+dist/
+node_modules/
+.amplify/
+amplify_outputs.json
+coverage/
+test-results/
+playwright-report/
+*.min.js
+*.min.css
+package-lock.json
+yarn.lock
