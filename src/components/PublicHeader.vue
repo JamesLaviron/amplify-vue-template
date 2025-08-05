@@ -5,11 +5,16 @@
       <div class="flex items-center space-x-2">
         <button
           v-if="showBackButton"
-          @click="$emit('back')"
           class="text-foreground hover:bg-background/20 p-2 rounded-md mr-2 cursor-pointer"
+          @click="$emit('back')"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
           </svg>
         </button>
         <span class="text-2xl">⚽</span>
@@ -20,19 +25,19 @@
       <div class="flex items-center space-x-2">
         <!-- Dark Mode Toggle -->
         <DarkModeToggle class="text-foreground hover:bg-background/20" />
-        
+
         <!-- Auth Buttons (show when not on auth page) -->
         <div v-if="!hideAuthButtons" class="flex space-x-2">
-          <Button 
-            @click="$emit('showAuth', 'signIn')" 
+          <Button
             variant="ghost"
             class="text-foreground hover:bg-background/20"
+            @click="$emit('showAuth', 'signIn')"
           >
             Sign In
           </Button>
-          <Button 
-            @click="$emit('showAuth', 'signUp')"
+          <Button
             class="bg-primary text-primary-foreground hover:bg-primary/90"
+            @click="$emit('showAuth', 'signUp')"
           >
             Sign Up
           </Button>
@@ -43,16 +48,16 @@
 </template>
 
 <script setup lang="ts">
-import { Button } from './ui'
-import DarkModeToggle from './DarkModeToggle.vue'
+import { Button } from './ui';
+import DarkModeToggle from './DarkModeToggle.vue';
 
 defineProps<{
-  showBackButton?: boolean
-  hideAuthButtons?: boolean
-}>()
+  showBackButton?: boolean;
+  hideAuthButtons?: boolean;
+}>();
 
 defineEmits<{
-  showAuth: [mode: 'signIn' | 'signUp']
-  back: []
-}>()
+  showAuth: [mode: 'signIn' | 'signUp'];
+  back: [];
+}>();
 </script>

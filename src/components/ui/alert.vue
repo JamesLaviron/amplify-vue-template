@@ -1,15 +1,12 @@
 <template>
-  <div
-    :class="cn(alertVariants({ variant }), props.class)"
-    role="alert"
-  >
+  <div :class="cn(alertVariants({ variant }), props.class)" role="alert">
     <slot />
   </div>
 </template>
 
 <script setup lang="ts">
-import { type VariantProps, cva } from 'class-variance-authority'
-import { cn } from '@/lib/utils'
+import { type VariantProps, cva } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
 
 const alertVariants = cva(
   'relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground',
@@ -25,14 +22,14 @@ const alertVariants = cva(
       variant: 'default',
     },
   }
-)
+);
 
 export interface AlertProps {
-  variant?: VariantProps<typeof alertVariants>['variant']
-  class?: string
+  variant?: VariantProps<typeof alertVariants>['variant'];
+  class?: string;
 }
 
 const props = withDefaults(defineProps<AlertProps>(), {
   variant: 'default',
-})
+});
 </script>

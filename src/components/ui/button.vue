@@ -10,9 +10,9 @@
 </template>
 
 <script setup lang="ts">
-import { Primitive } from 'radix-vue'
-import { type VariantProps, cva } from 'class-variance-authority'
-import { cn } from '@/lib/utils'
+import { Primitive } from 'radix-vue';
+import { type VariantProps, cva } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
   'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer',
@@ -38,17 +38,17 @@ const buttonVariants = cva(
       size: 'default',
     },
   }
-)
+);
 
 export interface ButtonProps {
-  variant?: VariantProps<typeof buttonVariants>['variant']
-  size?: VariantProps<typeof buttonVariants>['size']
-  as?: string
-  asChild?: boolean
-  class?: string
+  variant?: VariantProps<typeof buttonVariants>['variant'];
+  size?: VariantProps<typeof buttonVariants>['size'];
+  as?: string;
+  asChild?: boolean;
+  class?: string;
 }
 
 const props = withDefaults(defineProps<ButtonProps>(), {
   as: 'button',
-})
+});
 </script>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 export interface CardProps {
-  class?: string
+  class?: string;
 }
 
-const props = withDefaults(defineProps<CardProps>(), {})
+const props = withDefaults(defineProps<CardProps>(), {});
 </script>
 
 <template>
@@ -13,9 +13,9 @@ const props = withDefaults(defineProps<CardProps>(), {})
 </template>
 
 <script lang="ts">
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 export default {
-  name: 'Card'
-}
+  name: 'Card',
+};
 </script>

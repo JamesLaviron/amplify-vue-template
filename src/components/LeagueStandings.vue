@@ -1,99 +1,101 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { generateClient } from 'aws-amplify/data'
-import type { Schema } from '../../amplify/data/resource'
+import { ref, onMounted } from 'vue';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../../amplify/data/resource';
 
-const client = generateClient<Schema>()
+const client = generateClient<Schema>();
 
 interface Props {
-  userProfile: any
-  fantasyTeam: any
+  userProfile: any;
+  fantasyTeam: any;
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 
-const userLeagues = ref<any[]>([])
-const publicLeagues = ref<any[]>([])
-const loading = ref(true)
-const showCreateForm = ref(false)
-const showJoinForm = ref(false)
-const newLeagueName = ref('')
-const joinCode = ref('')
+const userLeagues = ref<any[]>([]);
+const publicLeagues = ref<any[]>([]);
+const loading = ref(true);
+const showCreateForm = ref(false);
+const showJoinForm = ref(false);
+const newLeagueName = ref('');
+const joinCode = ref('');
 
 onMounted(async () => {
-  await loadLeagues()
-})
+  await loadLeagues();
+});
 
 const loadLeagues = async () => {
   try {
     // Load user's league memberships
     const { data: memberships } = await client.models.LeagueMembership.list({
-      filter: { userId: { eq: props.userProfile.id } }
-    })
+      filter: { userId: { eq: props.userProfile.id } },
+    });
 
     // Load league details for each membership
     const leaguesWithDetails = await Promise.all(
-      memberships.map(async (membership) => {
-        const { data: league } = await client.models.League.get({ id: membership.leagueId })
-        
-        if (!league) return null
-        
+      memberships.map(async membership => {
+        const { data: league } = await client.models.League.get({ id: membership.leagueId });
+
+        if (!league) return null;
+
         // Get all members of this league
         const { data: allMembers } = await client.models.LeagueMembership.list({
-          filter: { leagueId: { eq: league.id } }
-        })
+          filter: { leagueId: { eq: league.id } },
+        });
 
         // Load user and team details for each member
         const membersWithDetails = await Promise.all(
-          allMembers.map(async (member) => {
-            const { data: user } = await client.models.UserProfile.get({ id: member.userId })
-            const { data: team } = await client.models.FantasyTeam.get({ id: member.fantasyTeamId })
-            return { ...member, user, team }
+          allMembers.map(async member => {
+            const { data: user } = await client.models.UserProfile.get({ id: member.userId });
+            const { data: team } = await client.models.FantasyTeam.get({
+              id: member.fantasyTeamId,
+            });
+            return { ...member, user, team };
           })
-        )
+        );
 
         // Sort by total points (descending)
-        membersWithDetails.sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0))
+        membersWithDetails.sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
 
         // Update ranks
         membersWithDetails.forEach((member, index) => {
-          member.rank = index + 1
-        })
+          member.rank = index + 1;
+        });
 
-        return { ...league, members: membersWithDetails }
+        return { ...league, members: membersWithDetails };
       })
-    )
+    );
 
-    userLeagues.value = leaguesWithDetails.filter(league => league !== null)
+    userLeagues.value = leaguesWithDetails.filter(league => league !== null);
 
     // Load public leagues (sample)
     const { data: allLeagues } = await client.models.League.list({
-      filter: { isPublic: { eq: true } }
-    })
+      filter: { isPublic: { eq: true } },
+    });
 
-    publicLeagues.value = allLeagues.slice(0, 5) // Show top 5 public leagues
+    publicLeagues.value = allLeagues.slice(0, 5); // Show top 5 public leagues
 
-    loading.value = false
+    loading.value = false;
   } catch (error) {
-    console.error('Error loading leagues:', error)
-    loading.value = false
+    console.error('Error loading leagues:', error);
+    loading.value = false;
   }
-}
+};
 
 const createLeague = async () => {
-  if (!newLeagueName.value.trim()) return
+  if (!newLeagueName.value.trim()) return;
 
   try {
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase()
-    
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+
     const { data: newLeague } = await client.models.League.create({
       name: newLeagueName.value,
       code,
       creatorId: props.userProfile.id,
-      isPublic: false
-    })
+      isPublic: false,
+    });
 
-    if (!newLeague) throw new Error('Failed to create league')
+    if (!newLeague) throw new Error('Failed to create league');
 
     // Join the league as creator
     await client.models.LeagueMembership.create({
@@ -101,56 +103,56 @@ const createLeague = async () => {
       userId: props.userProfile.id,
       fantasyTeamId: props.fantasyTeam.id,
       joinedAt: new Date().toISOString(),
-      totalPoints: props.userProfile.totalPoints || 0
-    })
+      totalPoints: props.userProfile.totalPoints || 0,
+    });
 
-    newLeagueName.value = ''
-    showCreateForm.value = false
-    await loadLeagues()
-    alert(`League created! Share code: ${code}`)
+    newLeagueName.value = '';
+    showCreateForm.value = false;
+    await loadLeagues();
+    alert(`League created! Share code: ${code}`);
   } catch (error) {
-    console.error('Error creating league:', error)
-    alert('Failed to create league')
+    console.error('Error creating league:', error);
+    alert('Failed to create league');
   }
-}
+};
 
 const joinLeague = async () => {
-  if (!joinCode.value.trim()) return
+  if (!joinCode.value.trim()) return;
 
   try {
     // Find league by code
     const { data: leagues } = await client.models.League.list({
-      filter: { code: { eq: joinCode.value.toUpperCase() } }
-    })
+      filter: { code: { eq: joinCode.value.toUpperCase() } },
+    });
 
     if (leagues.length === 0) {
-      alert('League not found! Please check the code.')
-      return
+      alert('League not found! Please check the code.');
+      return;
     }
 
-    const league = leagues[0]
+    const league = leagues[0];
 
     // Check if already a member
     const { data: existingMembership } = await client.models.LeagueMembership.list({
-      filter: { 
+      filter: {
         leagueId: { eq: league.id },
-        userId: { eq: props.userProfile.id }
-      }
-    })
+        userId: { eq: props.userProfile.id },
+      },
+    });
 
     if (existingMembership.length > 0) {
-      alert('You are already a member of this league!')
-      return
+      alert('You are already a member of this league!');
+      return;
     }
 
     // Check league capacity
     const { data: currentMembers } = await client.models.LeagueMembership.list({
-      filter: { leagueId: { eq: league.id } }
-    })
+      filter: { leagueId: { eq: league.id } },
+    });
 
     if (currentMembers.length >= (league.maxParticipants || 20)) {
-      alert('League is full!')
-      return
+      alert('League is full!');
+      return;
     }
 
     // Join the league
@@ -159,64 +161,64 @@ const joinLeague = async () => {
       userId: props.userProfile.id,
       fantasyTeamId: props.fantasyTeam.id,
       joinedAt: new Date().toISOString(),
-      totalPoints: props.userProfile.totalPoints || 0
-    })
+      totalPoints: props.userProfile.totalPoints || 0,
+    });
 
     // Update league participant count
     await client.models.League.update({
       id: league.id,
-      currentParticipants: currentMembers.length + 1
-    })
+      currentParticipants: currentMembers.length + 1,
+    });
 
-    joinCode.value = ''
-    showJoinForm.value = false
-    await loadLeagues()
-    alert(`Successfully joined ${league.name}!`)
+    joinCode.value = '';
+    showJoinForm.value = false;
+    await loadLeagues();
+    alert(`Successfully joined ${league.name}!`);
   } catch (error) {
-    console.error('Error joining league:', error)
-    alert('Failed to join league')
+    console.error('Error joining league:', error);
+    alert('Failed to join league');
   }
-}
+};
 
 const leaveLeague = async (leagueId: string) => {
-  if (!confirm('Are you sure you want to leave this league?')) return
+  if (!confirm('Are you sure you want to leave this league?')) return;
 
   try {
     // Find membership
     const { data: memberships } = await client.models.LeagueMembership.list({
-      filter: { 
+      filter: {
         leagueId: { eq: leagueId },
-        userId: { eq: props.userProfile.id }
-      }
-    })
+        userId: { eq: props.userProfile.id },
+      },
+    });
 
     if (memberships.length > 0) {
-      await client.models.LeagueMembership.delete({ id: memberships[0].id })
-      
+      await client.models.LeagueMembership.delete({ id: memberships[0].id });
+
       // Update league participant count
-      const { data: league } = await client.models.League.get({ id: leagueId })
+      const { data: league } = await client.models.League.get({ id: leagueId });
       if (league) {
         await client.models.League.update({
           id: leagueId,
-          currentParticipants: Math.max(0, (league.currentParticipants || 1) - 1)
-        })
+          currentParticipants: Math.max(0, (league.currentParticipants || 1) - 1),
+        });
       }
 
-      await loadLeagues()
-      alert('Left league successfully')
+      await loadLeagues();
+      alert('Left league successfully');
     }
   } catch (error) {
-    console.error('Error leaving league:', error)
-    alert('Failed to leave league')
+    console.error('Error leaving league:', error);
+    alert('Failed to leave league');
   }
-}
+};
 
 const getRankBadge = (rank: number) => {
-  if (rank === 1) return { icon: '🥇', class: 'gold' }
-  if (rank === 2) return { icon: '🥈', class: 'silver' }
-  if (rank === 3) return { icon: '🥉', class: 'bronze' }
-  return { icon: rank.toString(), class: 'default' }
-}
+  if (rank === 1) return { icon: '🥇', class: 'gold' };
+  if (rank === 2) return { icon: '🥈', class: 'silver' };
+  if (rank === 3) return { icon: '🥉', class: 'bronze' };
+  return { icon: rank.toString(), class: 'default' };
+};
 </script>
 
 <template>
@@ -224,12 +226,10 @@ const getRankBadge = (rank: number) => {
     <div class="standings-header">
       <h2>My Leagues</h2>
       <div class="action-buttons">
-        <button @click="showCreateForm = true" class="action-btn create-btn">
+        <button class="action-btn create-btn" @click="showCreateForm = true">
           ➕ Create League
         </button>
-        <button @click="showJoinForm = true" class="action-btn join-btn">
-          🎯 Join League
-        </button>
+        <button class="action-btn join-btn" @click="showJoinForm = true">🎯 Join League</button>
       </div>
     </div>
 
@@ -245,8 +245,8 @@ const getRankBadge = (rank: number) => {
           @keyup.enter="createLeague"
         />
         <div class="modal-actions">
-          <button @click="createLeague" class="btn primary">Create</button>
-          <button @click="showCreateForm = false" class="btn secondary">Cancel</button>
+          <button class="btn primary" @click="createLeague">Create</button>
+          <button class="btn secondary" @click="showCreateForm = false">Cancel</button>
         </div>
       </div>
     </div>
@@ -263,14 +263,14 @@ const getRankBadge = (rank: number) => {
           @keyup.enter="joinLeague"
         />
         <div class="modal-actions">
-          <button @click="joinLeague" class="btn primary">Join</button>
-          <button @click="showJoinForm = false" class="btn secondary">Cancel</button>
+          <button class="btn primary" @click="joinLeague">Join</button>
+          <button class="btn secondary" @click="showJoinForm = false">Cancel</button>
         </div>
       </div>
     </div>
 
     <div v-if="loading" class="loading">
-      <div class="spinner"></div>
+      <div class="spinner" />
       <p>Loading leagues...</p>
     </div>
 
@@ -286,11 +286,7 @@ const getRankBadge = (rank: number) => {
                 {{ league.currentParticipants }}/{{ league.maxParticipants }} members
               </p>
             </div>
-            <button 
-              @click="leaveLeague(league.id)" 
-              class="leave-btn"
-              title="Leave League"
-            >
+            <button class="leave-btn" title="Leave League" @click="leaveLeague(league.id)">
               ❌
             </button>
           </div>
@@ -302,17 +298,15 @@ const getRankBadge = (rank: number) => {
               <span class="team-col">Team</span>
               <span class="points-col">Points</span>
             </div>
-            
-            <div 
-              v-for="member in league.members" 
+
+            <div
+              v-for="member in league.members"
               :key="member.id"
               class="table-row"
               :class="{ 'current-user': member.userId === userProfile.id }"
             >
               <span class="rank-col">
-                <span 
-                  :class="['rank-badge', getRankBadge(member.rank).class]"
-                >
+                <span :class="['rank-badge', getRankBadge(member.rank).class]">
                   {{ getRankBadge(member.rank).icon }}
                 </span>
               </span>
@@ -329,8 +323,8 @@ const getRankBadge = (rank: number) => {
         <h3>You haven't joined any leagues yet</h3>
         <p>Create your own league or join existing ones to compete with friends!</p>
         <div class="cta-buttons">
-          <button @click="showCreateForm = true" class="btn primary">Create League</button>
-          <button @click="showJoinForm = true" class="btn secondary">Join League</button>
+          <button class="btn primary" @click="showCreateForm = true">Create League</button>
+          <button class="btn secondary" @click="showJoinForm = true">Join League</button>
         </div>
       </div>
 
@@ -338,11 +332,7 @@ const getRankBadge = (rank: number) => {
       <div v-if="publicLeagues.length > 0" class="public-leagues-section">
         <h3>Public Leagues</h3>
         <div class="public-leagues-grid">
-          <div 
-            v-for="league in publicLeagues" 
-            :key="league.id"
-            class="public-league-card"
-          >
+          <div v-for="league in publicLeagues" :key="league.id" class="public-league-card">
             <h4>{{ league.name }}</h4>
             <p>{{ league.currentParticipants }}/{{ league.maxParticipants }} members</p>
             <button class="btn secondary small">Join</button>
@@ -411,7 +401,7 @@ const getRankBadge = (rank: number) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -487,8 +477,12 @@ const getRankBadge = (rank: number) => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .leagues-section {
@@ -501,7 +495,7 @@ const getRankBadge = (rank: number) => {
   background: white;
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .league-header {
@@ -674,16 +668,16 @@ const getRankBadge = (rank: number) => {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .table-header,
   .table-row {
     grid-template-columns: 50px 1fr 60px;
   }
-  
+
   .team-col {
     display: none;
   }
-  
+
   .modal {
     min-width: auto;
     margin: 1rem;

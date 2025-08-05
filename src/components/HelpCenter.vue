@@ -6,13 +6,17 @@
         <div class="text-5xl mb-4">❓</div>
         <h1 class="text-4xl font-bold text-foreground mb-4">Help Center</h1>
         <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Find answers to common questions and learn how to make the most of your fantasy football experience.
+          Find answers to common questions and learn how to make the most of your fantasy football
+          experience.
         </p>
       </div>
 
       <!-- Quick Actions -->
       <div class="grid md:grid-cols-2 gap-6 mb-16 max-w-4xl mx-auto">
-        <Card class="cursor-pointer hover:shadow-lg transition-shadow" @click="$emit('showContact')">
+        <Card
+          class="cursor-pointer hover:shadow-lg transition-shadow"
+          @click="$emit('showContact')"
+        >
           <CardContent class="p-6 text-center">
             <div class="text-4xl mb-4">📧</div>
             <h3 class="text-xl font-semibold mb-2">Contact Support</h3>
@@ -35,8 +39,10 @@
 
       <!-- FAQ Section -->
       <div class="mt-16">
-        <h2 class="text-3xl font-bold text-center text-foreground mb-8">Frequently Asked Questions</h2>
-        
+        <h2 class="text-3xl font-bold text-center text-foreground mb-8">
+          Frequently Asked Questions
+        </h2>
+
         <div class="grid gap-6 max-w-3xl mx-auto">
           <Card>
             <CardHeader>
@@ -44,7 +50,9 @@
             </CardHeader>
             <CardContent>
               <p class="text-muted-foreground">
-                After signing up, navigate to "My Team" in the sidebar. You'll be able to select players from different positions, manage your formation, and track your team's performance.
+                After signing up, navigate to "My Team" in the sidebar. You'll be able to select
+                players from different positions, manage your formation, and track your team's
+                performance.
               </p>
             </CardContent>
           </Card>
@@ -55,7 +63,8 @@
             </CardHeader>
             <CardContent>
               <p class="text-muted-foreground">
-                Points are awarded based on real player performance: goals, assists, clean sheets, and more. Check the "Rules & Scoring" section for detailed point values.
+                Points are awarded based on real player performance: goals, assists, clean sheets,
+                and more. Check the "Rules & Scoring" section for detailed point values.
               </p>
             </CardContent>
           </Card>
@@ -66,7 +75,8 @@
             </CardHeader>
             <CardContent>
               <p class="text-muted-foreground">
-                Yes! You can create private leagues with friends or join public leagues to compete with other fantasy football enthusiasts worldwide.
+                Yes! You can create private leagues with friends or join public leagues to compete
+                with other fantasy football enthusiasts worldwide.
               </p>
             </CardContent>
           </Card>
@@ -77,7 +87,8 @@
             </CardHeader>
             <CardContent>
               <p class="text-muted-foreground">
-                Player scores are updated in real-time during matches and finalized shortly after each game ends. You can track live updates in the "Live Scores" section.
+                Player scores are updated in real-time during matches and finalized shortly after
+                each game ends. You can track live updates in the "Live Scores" section.
               </p>
             </CardContent>
           </Card>
@@ -88,9 +99,9 @@
 </template>
 
 <script setup lang="ts">
-import { Card, CardHeader, CardTitle, CardContent } from './ui'
+import { Card, CardHeader, CardTitle, CardContent } from './ui';
 
 defineEmits<{
-  showContact: []
-}>()
+  showContact: [];
+}>();
 </script>

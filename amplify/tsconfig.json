@@ -11,9 +11,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "$amplify/*": [
-        "../.amplify/generated/*",
-      ],
+      "$amplify/*": ["../.amplify/generated/*"]
     }
   }
 }

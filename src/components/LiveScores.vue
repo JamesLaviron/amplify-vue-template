@@ -1,100 +1,100 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { generateClient } from 'aws-amplify/data'
-import type { Schema } from '../../amplify/data/resource'
+import { ref, onMounted, onUnmounted } from 'vue';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../../amplify/data/resource';
 
-const client = generateClient<Schema>()
+const client = generateClient<Schema>();
 
-const matches = ref<any[]>([])
-const loading = ref(true)
-const currentGameweek = ref(1)
-let matchSubscription: any = null
+const matches = ref<any[]>([]);
+const loading = ref(true);
+const currentGameweek = ref(1);
+let matchSubscription: any = null;
 
 onMounted(async () => {
-  await loadMatches()
-  subscribeToMatchUpdates()
-})
+  await loadMatches();
+  subscribeToMatchUpdates();
+});
 
 onUnmounted(() => {
   if (matchSubscription) {
-    matchSubscription.unsubscribe()
+    matchSubscription.unsubscribe();
   }
-})
+});
 
 const loadMatches = async () => {
   try {
     const { data: matchData } = await client.models.MatchUpdate.list({
-      filter: { gameweek: { eq: currentGameweek.value } }
-    })
+      filter: { gameweek: { eq: currentGameweek.value } },
+    });
 
     // Load team details for each match
     const matchesWithTeams = await Promise.all(
-      matchData.map(async (match) => {
-        const { data: homeTeam } = await client.models.FootballTeam.get({ id: match.homeTeamId })
-        const { data: awayTeam } = await client.models.FootballTeam.get({ id: match.awayTeamId })
-        
+      matchData.map(async match => {
+        const { data: homeTeam } = await client.models.FootballTeam.get({ id: match.homeTeamId });
+        const { data: awayTeam } = await client.models.FootballTeam.get({ id: match.awayTeamId });
+
         return {
           ...match,
           homeTeam,
-          awayTeam
-        }
+          awayTeam,
+        };
       })
-    )
+    );
 
     matches.value = matchesWithTeams.sort((a, b) => {
-      const timeA = a.kickoffTime ? new Date(a.kickoffTime).getTime() : 0
-      const timeB = b.kickoffTime ? new Date(b.kickoffTime).getTime() : 0
-      return timeA - timeB
-    })
-    
-    loading.value = false
+      const timeA = a.kickoffTime ? new Date(a.kickoffTime).getTime() : 0;
+      const timeB = b.kickoffTime ? new Date(b.kickoffTime).getTime() : 0;
+      return timeA - timeB;
+    });
+
+    loading.value = false;
   } catch (error) {
-    console.error('Error loading matches:', error)
-    loading.value = false
+    console.error('Error loading matches:', error);
+    loading.value = false;
   }
-}
+};
 
 const subscribeToMatchUpdates = () => {
   try {
     matchSubscription = client.models.MatchUpdate.onUpdate().subscribe({
-      next: (updatedMatch) => {
-        console.log('Match updated:', updatedMatch)
-        
+      next: updatedMatch => {
+        console.log('Match updated:', updatedMatch);
+
         // Find and update the match in our local state
-        const matchIndex = matches.value.findIndex(m => m.id === updatedMatch.id)
+        const matchIndex = matches.value.findIndex(m => m.id === updatedMatch.id);
         if (matchIndex !== -1) {
-          matches.value[matchIndex] = { ...matches.value[matchIndex], ...updatedMatch }
+          matches.value[matchIndex] = { ...matches.value[matchIndex], ...updatedMatch };
         }
       },
-      error: (error) => {
-        console.error('Subscription error:', error)
-      }
-    })
+      error: error => {
+        console.error('Subscription error:', error);
+      },
+    });
   } catch (error) {
-    console.error('Error setting up subscription:', error)
+    console.error('Error setting up subscription:', error);
   }
-}
+};
 
 const getMatchStatus = (status: string) => {
   const statuses: { [key: string]: { text: string; class: string; color: string } } = {
-    'SCHEDULED': { text: 'Upcoming', class: 'scheduled', color: '#6b7280' },
-    'LIVE': { text: 'LIVE', class: 'live', color: '#ef4444' },
-    'FINISHED': { text: 'FT', class: 'finished', color: '#22c55e' }
-  }
-  return statuses[status] || statuses['SCHEDULED']
-}
+    SCHEDULED: { text: 'Upcoming', class: 'scheduled', color: '#6b7280' },
+    LIVE: { text: 'LIVE', class: 'live', color: '#ef4444' },
+    FINISHED: { text: 'FT', class: 'finished', color: '#22c55e' },
+  };
+  return statuses[status] || statuses['SCHEDULED'];
+};
 
 const formatKickoffTime = (kickoffTime: string) => {
   return new Date(kickoffTime).toLocaleTimeString('en-US', {
     hour: '2-digit',
-    minute: '2-digit'
-  })
-}
+    minute: '2-digit',
+  });
+};
 
 const refreshMatches = async () => {
-  loading.value = true
-  await loadMatches()
-}
+  loading.value = true;
+  await loadMatches();
+};
 </script>
 
 <template>
@@ -102,19 +102,15 @@ const refreshMatches = async () => {
     <div class="scores-header">
       <h2>Live Scores</h2>
       <div class="header-controls">
-        <select v-model="currentGameweek" @change="loadMatches" class="gameweek-select">
-          <option v-for="gw in 38" :key="gw" :value="gw">
-            Gameweek {{ gw }}
-          </option>
+        <select v-model="currentGameweek" class="gameweek-select" @change="loadMatches">
+          <option v-for="gw in 38" :key="gw" :value="gw">Gameweek {{ gw }}</option>
         </select>
-        <button @click="refreshMatches" class="refresh-btn" :disabled="loading">
-          🔄 Refresh
-        </button>
+        <button class="refresh-btn" :disabled="loading" @click="refreshMatches">🔄 Refresh</button>
       </div>
     </div>
 
     <div v-if="loading" class="loading">
-      <div class="spinner"></div>
+      <div class="spinner" />
       <p>Loading matches...</p>
     </div>
 
@@ -124,17 +120,14 @@ const refreshMatches = async () => {
     </div>
 
     <div v-else class="matches-list">
-      <div 
-        v-for="match in matches" 
+      <div
+        v-for="match in matches"
         :key="match.id"
         class="match-card"
         :class="getMatchStatus(match.status).class"
       >
         <div class="match-status">
-          <span 
-            class="status-indicator"
-            :style="{ color: getMatchStatus(match.status).color }"
-          >
+          <span class="status-indicator" :style="{ color: getMatchStatus(match.status).color }">
             {{ getMatchStatus(match.status).text }}
           </span>
           <span v-if="match.status === 'SCHEDULED'" class="kickoff-time">
@@ -169,7 +162,7 @@ const refreshMatches = async () => {
         </div>
 
         <div v-if="match.status === 'LIVE'" class="live-indicator">
-          <div class="pulse-dot"></div>
+          <div class="pulse-dot" />
           <span>LIVE</span>
         </div>
       </div>
@@ -247,8 +240,12 @@ const refreshMatches = async () => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .no-matches {
@@ -267,14 +264,16 @@ const refreshMatches = async () => {
   background: white;
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   position: relative;
 }
 
 .match-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .match-card.live {
@@ -395,12 +394,12 @@ const refreshMatches = async () => {
     transform: scale(0.95);
     box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
   }
-  
+
   70% {
     transform: scale(1);
     box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
   }
-  
+
   100% {
     transform: scale(0.95);
     box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
@@ -412,29 +411,29 @@ const refreshMatches = async () => {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .header-controls {
     justify-content: space-between;
   }
-  
+
   .match-teams {
     grid-template-columns: 1fr;
     gap: 1.5rem;
     text-align: center;
   }
-  
+
   .team {
     justify-content: center;
   }
-  
+
   .away-team {
     flex-direction: row;
   }
-  
+
   .match-separator {
     order: -1;
   }
-  
+
   .live-indicator {
     position: static;
     margin-top: 1rem;

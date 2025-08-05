@@ -1,159 +1,157 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { generateClient } from 'aws-amplify/data'
-import type { Schema } from '../../amplify/data/resource'
+import { ref, onMounted, computed } from 'vue';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../../amplify/data/resource';
 
-const client = generateClient<Schema>()
+const client = generateClient<Schema>();
 
 interface Props {
-  fantasyTeam: any
-  userProfile: any
+  fantasyTeam: any;
+  userProfile: any;
 }
 
-const props = defineProps<Props>()
-const emit = defineEmits(['team-updated'])
+const props = defineProps<Props>();
+const emit = defineEmits(['team-updated']);
 
-const selectedPlayers = ref<any[]>([])
-const formations = ['4-4-2', '4-3-3', '3-5-2', '5-3-2', '4-5-1']
-const currentFormation = ref(props.fantasyTeam?.formation || '4-4-2')
-const loading = ref(true)
+const selectedPlayers = ref<any[]>([]);
+const formations = ['4-4-2', '4-3-3', '3-5-2', '5-3-2', '4-5-1'];
+const currentFormation = ref(props.fantasyTeam?.formation || '4-4-2');
+const loading = ref(true);
 
 onMounted(async () => {
-  await loadTeamPlayers()
-})
+  await loadTeamPlayers();
+});
 
 const loadTeamPlayers = async () => {
   try {
-    if (!props.fantasyTeam?.id) return
+    if (!props.fantasyTeam?.id) return;
 
     const { data: selections } = await client.models.FantasySelection.list({
-      filter: { 
+      filter: {
         fantasyTeamId: { eq: props.fantasyTeam.id },
-        gameweekSelected: { eq: props.userProfile?.currentGameweek || 1 }
-      }
-    })
+        gameweekSelected: { eq: props.userProfile?.currentGameweek || 1 },
+      },
+    });
 
     // Load player details for each selection
     const playersWithDetails = await Promise.all(
-      selections.map(async (selection) => {
-        const { data: player } = await client.models.Player.get({ id: selection.playerId })
-        const { data: team } = await client.models.FootballTeam.get({ id: player?.teamId || '' })
-        
+      selections.map(async selection => {
+        const { data: player } = await client.models.Player.get({ id: selection.playerId });
+        const { data: team } = await client.models.FootballTeam.get({ id: player?.teamId || '' });
+
         return {
           ...selection,
-          player: { ...player, team }
-        }
+          player: { ...player, team },
+        };
       })
-    )
+    );
 
-    selectedPlayers.value = playersWithDetails
-    loading.value = false
+    selectedPlayers.value = playersWithDetails;
+    loading.value = false;
   } catch (error) {
-    console.error('Error loading team players:', error)
-    loading.value = false
+    console.error('Error loading team players:', error);
+    loading.value = false;
   }
-}
+};
 
 const updateFormation = async (formation: string) => {
   try {
     await client.models.FantasyTeam.update({
       id: props.fantasyTeam.id,
-      formation
-    })
-    currentFormation.value = formation
-    emit('team-updated')
+      formation,
+    });
+    currentFormation.value = formation;
+    emit('team-updated');
   } catch (error) {
-    console.error('Error updating formation:', error)
+    console.error('Error updating formation:', error);
   }
-}
+};
 
 const setCaptain = async (selectionId: string) => {
   try {
     // Remove captain from all players
     await Promise.all(
-      selectedPlayers.value.map(async (selection) => {
+      selectedPlayers.value.map(async selection => {
         if (selection.isCaptain) {
           await client.models.FantasySelection.update({
             id: selection.id,
             isCaptain: false,
-            isViceCaptain: false
-          })
+            isViceCaptain: false,
+          });
         }
       })
-    )
+    );
 
     // Set new captain
     await client.models.FantasySelection.update({
       id: selectionId,
       isCaptain: true,
-      isViceCaptain: false
-    })
+      isViceCaptain: false,
+    });
 
-    await loadTeamPlayers()
+    await loadTeamPlayers();
   } catch (error) {
-    console.error('Error setting captain:', error)
+    console.error('Error setting captain:', error);
   }
-}
+};
 
 const setViceCaptain = async (selectionId: string) => {
   try {
     // Remove vice captain from all players
     await Promise.all(
-      selectedPlayers.value.map(async (selection) => {
+      selectedPlayers.value.map(async selection => {
         if (selection.isViceCaptain) {
           await client.models.FantasySelection.update({
             id: selection.id,
-            isViceCaptain: false
-          })
+            isViceCaptain: false,
+          });
         }
       })
-    )
+    );
 
     // Set new vice captain
     await client.models.FantasySelection.update({
       id: selectionId,
-      isViceCaptain: true
-    })
+      isViceCaptain: true,
+    });
 
-    await loadTeamPlayers()
+    await loadTeamPlayers();
   } catch (error) {
-    console.error('Error setting vice captain:', error)
+    console.error('Error setting vice captain:', error);
   }
-}
+};
 
-const playersOnField = computed(() => 
+const playersOnField = computed(() =>
   selectedPlayers.value.filter(selection => !selection.isOnBench)
-)
+);
 
-const playersOnBench = computed(() => 
+const playersOnBench = computed(() =>
   selectedPlayers.value.filter(selection => selection.isOnBench)
-)
+);
 
 const getPositionPlayers = (position: string) => {
-  return playersOnField.value.filter(selection => 
-    selection.player?.position === position
-  )
-}
+  return playersOnField.value.filter(selection => selection.player?.position === position);
+};
 
 const getPositionIcon = (position: string) => {
   const icons: { [key: string]: string } = {
-    'GK': '🥅',
-    'DEF': '🛡️',
-    'MID': '⚽',
-    'FWD': '🎯'
-  }
-  return icons[position] || '⚽'
-}
+    GK: '🥅',
+    DEF: '🛡️',
+    MID: '⚽',
+    FWD: '🎯',
+  };
+  return icons[position] || '⚽';
+};
 
 const getAvailabilityStatus = (availability: string) => {
   const statuses: { [key: string]: { color: string; text: string } } = {
-    'AVAILABLE': { color: '#22c55e', text: 'Available' },
-    'INJURED': { color: '#ef4444', text: 'Injured' },
-    'SUSPENDED': { color: '#f59e0b', text: 'Suspended' },
-    'DOUBTFUL': { color: '#f97316', text: 'Doubtful' }
-  }
-  return statuses[availability] || statuses['AVAILABLE']
-}
+    AVAILABLE: { color: '#22c55e', text: 'Available' },
+    INJURED: { color: '#ef4444', text: 'Injured' },
+    SUSPENDED: { color: '#f59e0b', text: 'Suspended' },
+    DOUBTFUL: { color: '#f97316', text: 'Doubtful' },
+  };
+  return statuses[availability] || statuses['AVAILABLE'];
+};
 </script>
 
 <template>
@@ -171,7 +169,7 @@ const getAvailabilityStatus = (availability: string) => {
     </div>
 
     <div v-if="loading" class="loading">
-      <div class="spinner"></div>
+      <div class="spinner" />
       <p>Loading your team...</p>
     </div>
 
@@ -182,8 +180,8 @@ const getAvailabilityStatus = (availability: string) => {
           <!-- Formation Display -->
           <div class="formation-display">
             <div class="position-line goalkeepers">
-              <div 
-                v-for="player in getPositionPlayers('GK')" 
+              <div
+                v-for="player in getPositionPlayers('GK')"
                 :key="player.id"
                 class="player-card"
                 :class="{ captain: player.isCaptain, viceCaptain: player.isViceCaptain }"
@@ -195,30 +193,36 @@ const getAvailabilityStatus = (availability: string) => {
                   <span class="player-points">{{ player.player.totalPoints }}pts</span>
                 </div>
                 <div class="player-actions">
-                  <button 
-                    v-if="!player.isCaptain" 
-                    @click="setCaptain(player.id)"
+                  <button
+                    v-if="!player.isCaptain"
                     class="captain-btn"
                     title="Make Captain"
-                  >C</button>
-                  <button 
-                    v-if="!player.isViceCaptain && !player.isCaptain" 
-                    @click="setViceCaptain(player.id)"
+                    @click="setCaptain(player.id)"
+                  >
+                    C
+                  </button>
+                  <button
+                    v-if="!player.isViceCaptain && !player.isCaptain"
                     class="vice-captain-btn"
                     title="Make Vice Captain"
-                  >VC</button>
+                    @click="setViceCaptain(player.id)"
+                  >
+                    VC
+                  </button>
                 </div>
-                <div 
+                <div
                   class="availability-indicator"
-                  :style="{ backgroundColor: getAvailabilityStatus(player.player.availability).color }"
+                  :style="{
+                    backgroundColor: getAvailabilityStatus(player.player.availability).color,
+                  }"
                   :title="getAvailabilityStatus(player.player.availability).text"
-                ></div>
+                />
               </div>
             </div>
 
             <div class="position-line defenders">
-              <div 
-                v-for="player in getPositionPlayers('DEF')" 
+              <div
+                v-for="player in getPositionPlayers('DEF')"
                 :key="player.id"
                 class="player-card"
                 :class="{ captain: player.isCaptain, viceCaptain: player.isViceCaptain }"
@@ -230,27 +234,33 @@ const getAvailabilityStatus = (availability: string) => {
                   <span class="player-points">{{ player.player.totalPoints }}pts</span>
                 </div>
                 <div class="player-actions">
-                  <button 
-                    v-if="!player.isCaptain" 
-                    @click="setCaptain(player.id)"
+                  <button
+                    v-if="!player.isCaptain"
                     class="captain-btn"
-                  >C</button>
-                  <button 
-                    v-if="!player.isViceCaptain && !player.isCaptain" 
-                    @click="setViceCaptain(player.id)"
+                    @click="setCaptain(player.id)"
+                  >
+                    C
+                  </button>
+                  <button
+                    v-if="!player.isViceCaptain && !player.isCaptain"
                     class="vice-captain-btn"
-                  >VC</button>
+                    @click="setViceCaptain(player.id)"
+                  >
+                    VC
+                  </button>
                 </div>
-                <div 
+                <div
                   class="availability-indicator"
-                  :style="{ backgroundColor: getAvailabilityStatus(player.player.availability).color }"
-                ></div>
+                  :style="{
+                    backgroundColor: getAvailabilityStatus(player.player.availability).color,
+                  }"
+                />
               </div>
             </div>
 
             <div class="position-line midfielders">
-              <div 
-                v-for="player in getPositionPlayers('MID')" 
+              <div
+                v-for="player in getPositionPlayers('MID')"
                 :key="player.id"
                 class="player-card"
                 :class="{ captain: player.isCaptain, viceCaptain: player.isViceCaptain }"
@@ -262,27 +272,33 @@ const getAvailabilityStatus = (availability: string) => {
                   <span class="player-points">{{ player.player.totalPoints }}pts</span>
                 </div>
                 <div class="player-actions">
-                  <button 
-                    v-if="!player.isCaptain" 
-                    @click="setCaptain(player.id)"
+                  <button
+                    v-if="!player.isCaptain"
                     class="captain-btn"
-                  >C</button>
-                  <button 
-                    v-if="!player.isViceCaptain && !player.isCaptain" 
-                    @click="setViceCaptain(player.id)"
+                    @click="setCaptain(player.id)"
+                  >
+                    C
+                  </button>
+                  <button
+                    v-if="!player.isViceCaptain && !player.isCaptain"
                     class="vice-captain-btn"
-                  >VC</button>
+                    @click="setViceCaptain(player.id)"
+                  >
+                    VC
+                  </button>
                 </div>
-                <div 
+                <div
                   class="availability-indicator"
-                  :style="{ backgroundColor: getAvailabilityStatus(player.player.availability).color }"
-                ></div>
+                  :style="{
+                    backgroundColor: getAvailabilityStatus(player.player.availability).color,
+                  }"
+                />
               </div>
             </div>
 
             <div class="position-line forwards">
-              <div 
-                v-for="player in getPositionPlayers('FWD')" 
+              <div
+                v-for="player in getPositionPlayers('FWD')"
                 :key="player.id"
                 class="player-card"
                 :class="{ captain: player.isCaptain, viceCaptain: player.isViceCaptain }"
@@ -294,21 +310,27 @@ const getAvailabilityStatus = (availability: string) => {
                   <span class="player-points">{{ player.player.totalPoints }}pts</span>
                 </div>
                 <div class="player-actions">
-                  <button 
-                    v-if="!player.isCaptain" 
-                    @click="setCaptain(player.id)"
+                  <button
+                    v-if="!player.isCaptain"
                     class="captain-btn"
-                  >C</button>
-                  <button 
-                    v-if="!player.isViceCaptain && !player.isCaptain" 
-                    @click="setViceCaptain(player.id)"
+                    @click="setCaptain(player.id)"
+                  >
+                    C
+                  </button>
+                  <button
+                    v-if="!player.isViceCaptain && !player.isCaptain"
                     class="vice-captain-btn"
-                  >VC</button>
+                    @click="setViceCaptain(player.id)"
+                  >
+                    VC
+                  </button>
                 </div>
-                <div 
+                <div
                   class="availability-indicator"
-                  :style="{ backgroundColor: getAvailabilityStatus(player.player.availability).color }"
-                ></div>
+                  :style="{
+                    backgroundColor: getAvailabilityStatus(player.player.availability).color,
+                  }"
+                />
               </div>
             </div>
           </div>
@@ -319,19 +341,15 @@ const getAvailabilityStatus = (availability: string) => {
       <div class="bench-section">
         <h3>Bench</h3>
         <div class="bench-players">
-          <div 
-            v-for="player in playersOnBench" 
-            :key="player.id"
-            class="bench-player"
-          >
+          <div v-for="player in playersOnBench" :key="player.id" class="bench-player">
             <span class="player-position">{{ getPositionIcon(player.player.position) }}</span>
             <span class="player-name">{{ player.player.name }}</span>
             <span class="player-team">{{ player.player.team?.shortName }}</span>
             <span class="player-points">{{ player.player.totalPoints }}pts</span>
-            <div 
+            <div
               class="availability-indicator"
               :style="{ backgroundColor: getAvailabilityStatus(player.player.availability).color }"
-            ></div>
+            />
           </div>
         </div>
       </div>
@@ -401,9 +419,9 @@ const getAvailabilityStatus = (availability: string) => {
 .field {
   background: linear-gradient(
     90deg,
-    rgba(255,255,255,0.1) 0%,
-    rgba(255,255,255,0.05) 50%,
-    rgba(255,255,255,0.1) 100%
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.1) 100%
   );
   border-radius: 8px;
   padding: 1rem;
@@ -430,7 +448,7 @@ const getAvailabilityStatus = (availability: string) => {
   background: white;
   border-radius: 8px;
   padding: 0.75rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   min-width: 120px;
   text-align: center;
   position: relative;
@@ -440,7 +458,7 @@ const getAvailabilityStatus = (availability: string) => {
 
 .player-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .player-card.captain {
@@ -488,7 +506,8 @@ const getAvailabilityStatus = (availability: string) => {
   gap: 2px;
 }
 
-.captain-btn, .vice-captain-btn {
+.captain-btn,
+.vice-captain-btn {
   width: 20px;
   height: 20px;
   border-radius: 50%;
@@ -546,7 +565,7 @@ const getAvailabilityStatus = (availability: string) => {
   align-items: center;
   gap: 0.25rem;
   min-width: 100px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   position: relative;
 }
 
@@ -554,12 +573,12 @@ const getAvailabilityStatus = (availability: string) => {
   .pitch {
     padding: 1rem;
   }
-  
+
   .player-card {
     min-width: 100px;
     padding: 0.5rem;
   }
-  
+
   .bench-players {
     justify-content: center;
   }

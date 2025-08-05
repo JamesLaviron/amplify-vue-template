@@ -1,9 +1,9 @@
 <script setup lang="ts">
 export interface CardHeaderProps {
-  class?: string
+  class?: string;
 }
 
-const props = withDefaults(defineProps<CardHeaderProps>(), {})
+const props = withDefaults(defineProps<CardHeaderProps>(), {});
 </script>
 
 <template>
@@ -13,9 +13,9 @@ const props = withDefaults(defineProps<CardHeaderProps>(), {})
 </template>
 
 <script lang="ts">
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 export default {
-  name: 'CardHeader'
-}
+  name: 'CardHeader',
+};
 </script>

@@ -6,28 +6,27 @@
         <!-- Logo and Title -->
         <div class="mb-8">
           <div class="text-6xl sm:text-7xl mb-4">⚽</div>
-          <h1 class="text-4xl sm:text-6xl font-bold text-foreground mb-4">
-            Fantasy Football
-          </h1>
+          <h1 class="text-4xl sm:text-6xl font-bold text-foreground mb-4">Fantasy Football</h1>
           <p class="text-xl sm:text-2xl text-muted-foreground max-w-2xl mx-auto">
-            Build your dream team, compete with friends, and experience the ultimate fantasy football adventure
+            Build your dream team, compete with friends, and experience the ultimate fantasy
+            football adventure
           </p>
         </div>
 
         <!-- CTA Buttons -->
         <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-          <Button 
-            @click="$emit('showAuth', 'signUp')" 
-            size="lg" 
+          <Button
+            size="lg"
             class="w-full sm:w-auto px-8 py-3 text-lg"
+            @click="$emit('showAuth', 'signUp')"
           >
             Get Started Free
           </Button>
-          <Button 
-            @click="$emit('showAuth', 'signIn')" 
-            variant="outline" 
-            size="lg" 
+          <Button
+            variant="outline"
+            size="lg"
             class="w-full sm:w-auto px-8 py-3 text-lg"
+            @click="$emit('showAuth', 'signIn')"
           >
             Sign In
           </Button>
@@ -61,7 +60,7 @@
         <h2 class="text-3xl sm:text-4xl font-bold text-center text-foreground mb-12">
           Why Choose Fantasy Football?
         </h2>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <!-- Feature 1 -->
           <Card class="text-center p-6 hover:shadow-lg transition-shadow">
@@ -69,7 +68,8 @@
               <div class="text-4xl mb-4">👥</div>
               <CardTitle class="mb-3">Team Management</CardTitle>
               <p class="text-muted-foreground">
-                Build and customize your ultimate football team with real players and strategic formations
+                Build and customize your ultimate football team with real players and strategic
+                formations
               </p>
             </CardContent>
           </Card>
@@ -135,28 +135,26 @@
     <!-- CTA Section -->
     <section class="py-20 px-4 bg-[#D9A299] text-white">
       <div class="container mx-auto max-w-4xl text-center">
-        <h2 class="text-3xl sm:text-4xl font-bold mb-6">
-          Ready to Start Your Fantasy Journey?
-        </h2>
+        <h2 class="text-3xl sm:text-4xl font-bold mb-6">Ready to Start Your Fantasy Journey?</h2>
         <p class="text-lg sm:text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-          Join thousands of football fans already competing in the most exciting fantasy football experience. 
-          Sign up now and start building your championship team!
+          Join thousands of football fans already competing in the most exciting fantasy football
+          experience. Sign up now and start building your championship team!
         </p>
-        
+
         <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Button 
-            @click="$emit('showAuth', 'signUp')" 
+          <Button
             variant="secondary"
-            size="lg" 
+            size="lg"
             class="w-full sm:w-auto px-8 py-3 text-lg"
+            @click="$emit('showAuth', 'signUp')"
           >
             Create Free Account
           </Button>
-          <Button 
-            @click="$emit('showAuth', 'signIn')" 
-            variant="outline" 
-            size="lg" 
+          <Button
+            variant="outline"
+            size="lg"
             class="w-full sm:w-auto px-8 py-3 text-lg border-white text-white hover:bg-white hover:text-primary bg-transparent"
+            @click="$emit('showAuth', 'signIn')"
           >
             Sign In
           </Button>
@@ -171,10 +169,10 @@
 </template>
 
 <script setup lang="ts">
-import { Button, Card, CardContent, CardTitle } from './ui'
-import AnimatedNumber from './AnimatedNumber.vue'
+import { Button, Card, CardContent, CardTitle } from './ui';
+import AnimatedNumber from './AnimatedNumber.vue';
 
 defineEmits<{
-  showAuth: [mode: 'signIn' | 'signUp']
-}>()
+  showAuth: [mode: 'signIn' | 'signUp'];
+}>();
 </script>
