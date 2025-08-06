@@ -23,7 +23,9 @@
   },
   "dependencies": {
     "@aws-amplify/ui-vue": "^4.3.3",
+    "@aws-sdk/client-dynamodb": "^3.859.0",
     "@aws-sdk/client-ses": "^3.859.0",
+    "@aws-sdk/credential-providers": "^3.859.0",
     "@tailwindcss/vite": "^4.1.11",
     "@vueuse/core": "^13.6.0",
     "aws-amplify": "^6.6.6",

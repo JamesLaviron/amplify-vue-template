@@ -4,11 +4,7 @@ import App from './App.vue';
 import { Amplify } from 'aws-amplify';
 import outputs from '../amplify_outputs.json';
 
-// Import seeding utility for development
-import './utils/seedPlayers';
-import './utils/testApiFootball';
-import './utils/testAmplifyModels';
-import './utils/debugSeeder';
+// Development utilities removed - data population now handled server-side
 
 Amplify.configure(outputs);
 

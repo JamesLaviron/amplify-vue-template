@@ -8,6 +8,29 @@ specifies that any user authenticated via an API key can "create", "read",
 =========================================================================*/
 
 const schema = a.schema({
+  // Static Premier League teams data (read-only reference table)
+  StaticLeagues: a
+    .model({
+      apiId: a.string().required(), // ID from API-Football (e.g., "34", "40")
+      name: a.string().required(), // "Newcastle", "Liverpool"
+      code: a.string().required(), // "NEW", "LIV"
+      country: a.string().required(), // "England"
+      founded: a.integer(), // 1892
+      national: a.boolean().default(false),
+      logo: a.string(), // Logo URL
+      venueId: a.string(), // Venue ID
+      venueName: a.string(), // "St. James' Park"
+      venueAddress: a.string(), // Stadium address
+      venueCity: a.string(), // City
+      venueCapacity: a.integer(), // Stadium capacity
+      venueSurface: a.string(), // "grass"
+      venueImage: a.string(), // Venue image URL
+    })
+    .authorization(allow => [
+      allow.authenticated().to(['read']),
+      allow.publicApiKey().to(['read']),
+    ]),
+
   // User profile extending the built-in authentication
   UserProfile: a
     .model({
