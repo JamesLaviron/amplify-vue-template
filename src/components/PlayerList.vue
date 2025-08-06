@@ -42,8 +42,8 @@ onMounted(async () => {
 
 const loadData = async () => {
   try {
-    // Load teams first
-    const { data: teamsData } = await client.models.FootballTeam.list();
+    // Load teams from StaticLeagues table for better performance
+    const { data: teamsData } = await client.models.StaticLeagues.list();
     teams.value = teamsData;
 
     // Load players with team data
@@ -227,7 +227,7 @@ const resetFilters = () => {
           <select v-model="teamFilter" class="filter-select">
             <option value="ALL">All Teams</option>
             <option v-for="team in teams" :key="team.id" :value="team.id">
-              {{ team.shortName }} - {{ team.name }}
+              {{ team.code }} - {{ team.name }}
             </option>
           </select>
         </div>

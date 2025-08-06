@@ -31,6 +31,44 @@ const schema = a.schema({
       allow.publicApiKey().to(['read']),
     ]),
 
+  // Static Premier League players data (read-only reference table)
+  StaticPlayers: a
+    .model({
+      apiId: a.string().required(), // Player ID from API-Football
+      name: a.string().required(), // Player full name
+      firstname: a.string(),
+      lastname: a.string(),
+      age: a.integer(),
+      birthDate: a.string(), // ISO date string
+      birthPlace: a.string(),
+      birthCountry: a.string(),
+      nationality: a.string(),
+      height: a.string(), // e.g., "180 cm"
+      weight: a.string(), // e.g., "75 kg"
+      photo: a.string(), // Player photo URL
+      teamApiId: a.string().required(), // Team ID from API-Football
+      teamName: a.string(),
+      position: a.string(), // "Goalkeeper", "Defender", "Midfielder", "Attacker"
+      number: a.integer(), // Jersey number
+      // Current season statistics
+      appearances: a.integer().default(0),
+      goals: a.integer().default(0),
+      assists: a.integer().default(0),
+      yellowCards: a.integer().default(0),
+      redCards: a.integer().default(0),
+      minutes: a.integer().default(0),
+      rating: a.string(), // Average rating as string (e.g., "7.2")
+      // Fantasy-specific fields
+      fantasyPrice: a.float().default(5.0), // Default price in millions
+      fantasyPoints: a.integer().default(0),
+      isInjured: a.boolean().default(false),
+      injuryDetails: a.string(),
+    })
+    .authorization(allow => [
+      allow.authenticated().to(['read']),
+      allow.publicApiKey().to(['read']),
+    ]),
+
   // User profile extending the built-in authentication
   UserProfile: a
     .model({
