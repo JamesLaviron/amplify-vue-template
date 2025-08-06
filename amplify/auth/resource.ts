@@ -16,11 +16,13 @@ export const auth = defineAuth({
       },
       callbackUrls: [
         'http://localhost:5173/',
-        'https://main.d2x8z9k8z9k8z9.amplifyapp.com/', // Replace with your actual Amplify app URL
+        // TODO: Replace with your actual production URL from Amplify Console
+        'https://main.d28b7tcuowp4up.amplifyapp.com/',
       ],
       logoutUrls: [
         'http://localhost:5173/',
-        'https://main.d2x8z9k8z9k8z9.amplifyapp.com/', // Replace with your actual Amplify app URL
+        // TODO: Replace with your actual production URL from Amplify Console
+        'https://main.d28b7tcuowp4up.amplifyapp.com/',
       ],
     },
   },
