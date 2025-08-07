@@ -104,12 +104,19 @@ async function getApiKey(): Promise<string> {
   }
 }
 
-async function fetchPlayersForTeam(teamId: string, teamName: string): Promise<PlayerData[]> {
+async function fetchPlayersForTeam(
+  teamId: string,
+  teamName: string,
+  retryCount = 0
+): Promise<PlayerData[]> {
   const apiKey = await getApiKey();
+  const maxRetries = 2;
 
   const url = `https://v3.football.api-sports.io/players?team=${teamId}&season=2023&league=39`;
 
-  console.log(`Fetching players for ${teamName} (ID: ${teamId})...`);
+  console.log(
+    `Fetching players for ${teamName} (ID: ${teamId})${retryCount > 0 ? ` - Retry ${retryCount}` : ''}...`
+  );
 
   try {
     const response = await fetch(url, {
@@ -130,10 +137,27 @@ async function fetchPlayersForTeam(teamId: string, teamName: string): Promise<Pl
       throw new Error(`API returned errors: ${JSON.stringify(data.errors)}`);
     }
 
-    console.log(`Found ${data.response?.length || 0} players for ${teamName}`);
-    return data.response || [];
+    const players = data.response || [];
+    console.log(`Found ${players.length} players for ${teamName}`);
+
+    // If no players found and we haven't reached max retries, try again
+    if (players.length === 0 && retryCount < maxRetries) {
+      console.log(`⚠️ No players found for ${teamName}, retrying in 3 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      return fetchPlayersForTeam(teamId, teamName, retryCount + 1);
+    }
+
+    return players;
   } catch (error) {
     console.error(`Error fetching players for ${teamName}:`, error);
+
+    // If error occurred and we haven't reached max retries, try again
+    if (retryCount < maxRetries) {
+      console.log(`⚠️ Error occurred for ${teamName}, retrying in 5 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      return fetchPlayersForTeam(teamId, teamName, retryCount + 1);
+    }
+
     return [];
   }
 }
