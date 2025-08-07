@@ -1,7 +1,12 @@
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import fetch from 'node-fetch';
 
 const dynamoClient = new DynamoDBClient({
+  region: process.env.AWS_REGION || 'eu-west-3',
+});
+
+const secretsClient = new SecretsManagerClient({
   region: process.env.AWS_REGION || 'eu-west-3',
 });
 
@@ -73,11 +78,34 @@ interface PlayerData {
   }>;
 }
 
-async function fetchPlayersForTeam(teamId: string, teamName: string): Promise<PlayerData[]> {
-  const apiKey = process.env.API_FOOTBALL_KEY;
-  if (!apiKey) {
-    throw new Error('API_FOOTBALL_KEY environment variable is not set');
+async function getApiKey(): Promise<string> {
+  try {
+    const command = new GetSecretValueCommand({
+      SecretId: 'API_FOOTBALL_KEY',
+    });
+
+    const response = await secretsClient.send(command);
+
+    if (!response.SecretString) {
+      throw new Error('API_FOOTBALL_KEY secret not found or empty');
+    }
+
+    // If the secret is stored as JSON, parse it
+    try {
+      const secret = JSON.parse(response.SecretString);
+      return secret.API_FOOTBALL_KEY || secret.apiKey || response.SecretString;
+    } catch {
+      // If it's not JSON, return the raw secret string
+      return response.SecretString;
+    }
+  } catch (error) {
+    console.error('Error retrieving API key from Secrets Manager:', error);
+    throw new Error('Failed to retrieve API_FOOTBALL_KEY from Secrets Manager');
   }
+}
+
+async function fetchPlayersForTeam(teamId: string, teamName: string): Promise<PlayerData[]> {
+  const apiKey = await getApiKey();
 
   const url = `https://v3.football.api-sports.io/players?team=${teamId}&season=2023&league=39`;
 

@@ -1,4 +1,5 @@
 import { defineBackend } from '@aws-amplify/backend';
+import { PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { injectStaticLeagues } from './functions/inject-static-leagues/resource';
@@ -31,4 +32,15 @@ backend.injectStaticPlayers.addEnvironment(
 // Permissions pour accéder à la table StaticPlayers
 backend.data.resources.tables['StaticPlayers'].grantFullAccess(
   backend.injectStaticPlayers.resources.lambda
+);
+
+// Grant permissions to access Secrets Manager for API_FOOTBALL_KEY
+backend.injectStaticPlayers.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
+    resources: [
+      `arn:aws:secretsmanager:${process.env.AWS_REGION || 'eu-west-3'}:*:secret:API_FOOTBALL_KEY*`,
+    ],
+  })
 );
