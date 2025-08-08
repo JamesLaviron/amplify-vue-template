@@ -42,17 +42,61 @@ onMounted(async () => {
 
 const loadData = async () => {
   try {
-    // Load teams from StaticLeagues table for better performance
-    const { data: teamsData } = await client.models.StaticLeagues.list();
+    // Debug info
+    console.log('🔍 Debug Info:');
+    console.log('  client.models exists:', !!client.models);
+    console.log('  client.models keys:', Object.keys(client.models || {}));
+    console.log('  StaticLeague available:', !!(client.models && client.models.StaticLeague));
+    console.log('  StaticPlayer available:', !!(client.models && client.models.StaticPlayer));
+
+    // Check if models are available
+    if (!client.models || !client.models.StaticLeague || !client.models.StaticPlayer) {
+      console.warn('❌ Amplify models not available - backend not deployed or configured');
+      console.warn('📋 Using mock data for development');
+      await loadMockData();
+      return;
+    }
+
+    // Load teams and players directly from DynamoDB tables
+    const { data: teamsData } = await client.models.StaticLeague.list();
     teams.value = teamsData;
 
-    // Load players with team data
-    const { data: playersData } = await client.models.Player.list();
+    const { data: staticPlayersData } = await client.models.StaticPlayer.list();
 
-    // Enrich players with team information
-    const playersWithTeams = playersData.map(player => {
-      const team = teams.value.find(t => t.id === player.teamId);
-      return { ...player, team };
+    // Transform static players data to match Player interface and enrich with team information
+    const playersWithTeams = staticPlayersData.map((staticPlayer: any) => {
+      const team = teams.value.find(t => t.name === staticPlayer.teamName);
+
+      return {
+        id: staticPlayer.id,
+        apiId: staticPlayer.apiId,
+        name: staticPlayer.name,
+        position: mapStaticPositionToPlayerPosition(staticPlayer.position),
+        teamId: team?.id || staticPlayer.teamApiId,
+        team: team || {
+          id: staticPlayer.teamApiId,
+          name: staticPlayer.teamName,
+          shortName: staticPlayer.teamName.substring(0, 3).toUpperCase(),
+          code: staticPlayer.teamName.substring(0, 3).toUpperCase(),
+        },
+        price: staticPlayer.fantasyPrice,
+        totalPoints: staticPlayer.fantasyPoints || 0,
+        form: parseFloat(staticPlayer.rating) || 6.0,
+        availability: staticPlayer.isInjured ? 'INJURED' : 'AVAILABLE',
+        // Additional player data from StaticPlayers
+        firstname: staticPlayer.firstname,
+        lastname: staticPlayer.lastname,
+        age: staticPlayer.age,
+        nationality: staticPlayer.nationality,
+        photo: staticPlayer.photo,
+        appearances: staticPlayer.appearances,
+        goals: staticPlayer.goals,
+        assists: staticPlayer.assists,
+        yellowCards: staticPlayer.yellowCards,
+        redCards: staticPlayer.redCards,
+        minutes: staticPlayer.minutes,
+        rating: staticPlayer.rating,
+      };
     });
 
     players.value = playersWithTeams;
@@ -60,6 +104,81 @@ const loadData = async () => {
   } catch (error) {
     console.error('Error loading players:', error);
     loading.value = false;
+  }
+};
+
+const loadMockData = async () => {
+  // Mock data for development when backend is not available
+  teams.value = [
+    { id: '1', name: 'Manchester United', code: 'MUN', shortName: 'MUN' },
+    { id: '2', name: 'Liverpool', code: 'LIV', shortName: 'LIV' },
+    { id: '3', name: 'Arsenal', code: 'ARS', shortName: 'ARS' },
+    { id: '4', name: 'Chelsea', code: 'CHE', shortName: 'CHE' },
+  ];
+
+  players.value = [
+    {
+      id: '1',
+      name: 'Mohamed Salah',
+      position: 'FWD',
+      teamId: '2',
+      team: teams.value[1],
+      price: 13.0,
+      totalPoints: 180,
+      form: 8.5,
+      availability: 'AVAILABLE',
+    },
+    {
+      id: '2',
+      name: 'Bruno Fernandes',
+      position: 'MID',
+      teamId: '1',
+      team: teams.value[0],
+      price: 8.5,
+      totalPoints: 150,
+      form: 7.8,
+      availability: 'AVAILABLE',
+    },
+    {
+      id: '3',
+      name: 'Virgil van Dijk',
+      position: 'DEF',
+      teamId: '2',
+      team: teams.value[1],
+      price: 6.5,
+      totalPoints: 120,
+      form: 7.2,
+      availability: 'AVAILABLE',
+    },
+    {
+      id: '4',
+      name: 'Alisson',
+      position: 'GK',
+      teamId: '2',
+      team: teams.value[1],
+      price: 5.5,
+      totalPoints: 100,
+      form: 6.8,
+      availability: 'AVAILABLE',
+    },
+  ];
+
+  loading.value = false;
+};
+
+// Map StaticPlayers position format to Player position format
+const mapStaticPositionToPlayerPosition = (staticPosition: string): string => {
+  switch (staticPosition) {
+    case 'Goalkeeper':
+      return 'GK';
+    case 'Defender':
+      return 'DEF';
+    case 'Midfielder':
+      return 'MID';
+    case 'Attacker':
+      return 'FWD';
+    default:
+      return 'MID';
   }
 };
 

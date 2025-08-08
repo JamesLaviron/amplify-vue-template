@@ -9,7 +9,6 @@ import LandingContent from './components/LandingContent.vue';
 import PublicHeader from './components/PublicHeader.vue';
 import HelpCenter from './components/HelpCenter.vue';
 import AuthenticatedHelpCenter from './components/AuthenticatedHelpCenter.vue';
-import AdminPanel from './components/AdminPanel.vue';
 import ContactUs from './components/ContactUs.vue';
 const user = ref<any>(null);
 const showAuth = ref(false);
@@ -114,11 +113,6 @@ const handleShowContact = () => {
             <!-- Help Center View -->
             <div v-else-if="currentMenu === 'help'" class="max-w-4xl mx-auto">
               <AuthenticatedHelpCenter :user="user" />
-            </div>
-
-            <!-- Admin Panel View -->
-            <div v-else-if="currentMenu === 'admin'" class="max-w-4xl mx-auto">
-              <AdminPanel />
             </div>
 
             <!-- Default to Dashboard -->

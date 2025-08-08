@@ -48,12 +48,21 @@ const loadUserData = async () => {
         email: props.user.signInDetails?.loginId || props.user.attributes?.email,
         createdAt: new Date().toISOString(),
       });
+
+      if (!newProfile) {
+        throw new Error('Failed to create user profile');
+      }
+
       userProfile.value = newProfile;
     } else {
       userProfile.value = profiles[0];
     }
 
     // Check if user has a fantasy team
+    if (!userProfile.value || !userProfile.value.id) {
+      throw new Error('Failed to create or load user profile');
+    }
+
     const { data: teams } = await client.models.FantasyTeam.list({
       filter: { owner: { eq: userProfile.value.id } },
     });

@@ -1,15 +1,8 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 
-/*== STEP 1 ===============================================================
-The section below creates a Todo database table with a "content" field. Try
-adding a new "isDone" field as a boolean. The authorization rule below
-specifies that any user authenticated via an API key can "create", "read",
-"update", and "delete" any "Todo" records.
-=========================================================================*/
-
 const schema = a.schema({
   // Static Premier League teams data (read-only reference table)
-  StaticLeagues: a
+  StaticLeague: a
     .model({
       apiId: a.string().required(), // ID from API-Football (e.g., "34", "40")
       name: a.string().required(), // "Newcastle", "Liverpool"
@@ -32,7 +25,7 @@ const schema = a.schema({
     ]),
 
   // Static Premier League players data (read-only reference table)
-  StaticPlayers: a
+  StaticPlayer: a
     .model({
       apiId: a.string().required(), // Player ID from API-Football
       name: a.string().required(), // Player full name

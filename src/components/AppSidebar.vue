@@ -106,13 +106,6 @@
               :collapsed="isCollapsed"
               @click="setActiveMenu('help')"
             />
-            <SidebarMenuItem
-              icon="🔧"
-              label="Admin Panel"
-              :active="activeMenu === 'admin'"
-              :collapsed="isCollapsed"
-              @click="setActiveMenu('admin')"
-            />
 
             <!-- Dark Mode Toggle -->
             <div v-if="!isCollapsed" class="px-3 py-1 transition-opacity duration-300">

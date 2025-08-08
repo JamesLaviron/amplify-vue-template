@@ -15,22 +15,22 @@ export const backend = defineBackend({
 // Donner l'accès DynamoDB à la Lambda
 backend.injectStaticLeagues.addEnvironment(
   'STATIC_LEAGUES_TABLE_NAME',
-  backend.data.resources.tables['StaticLeagues'].tableName
+  backend.data.resources.tables['StaticLeague'].tableName
 );
 
-// Permissions pour accéder à la table StaticLeagues
-backend.data.resources.tables['StaticLeagues'].grantFullAccess(
+// Permissions pour accéder à la table StaticLeague
+backend.data.resources.tables['StaticLeague'].grantFullAccess(
   backend.injectStaticLeagues.resources.lambda
 );
 
 // Configuration pour inject-static-players Lambda
 backend.injectStaticPlayers.addEnvironment(
   'STATIC_PLAYERS_TABLE_NAME',
-  backend.data.resources.tables['StaticPlayers'].tableName
+  backend.data.resources.tables['StaticPlayer'].tableName
 );
 
-// Permissions pour accéder à la table StaticPlayers
-backend.data.resources.tables['StaticPlayers'].grantFullAccess(
+// Permissions pour accéder à la table StaticPlayer
+backend.data.resources.tables['StaticPlayer'].grantFullAccess(
   backend.injectStaticPlayers.resources.lambda
 );
 
